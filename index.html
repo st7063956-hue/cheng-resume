@@ -66,7 +66,7 @@ nav a:hover{color:var(--cyan);text-shadow:0 0 10px rgba(0,229,255,.8)}
 /* ══ Hero ══ */
 .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;padding-top:90px;text-align:center}
 .hero-inner{width:100%;display:flex;flex-direction:column;align-items:center}
-.tag{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--cyan);color:var(--cyan);font-family:var(--pixel);font-size:12px;letter-spacing:2px;padding:9px 20px;margin-bottom:32px;background:rgba(0,229,255,.05);border-radius:var(--radius-sm);box-shadow:0 0 18px rgba(0,229,255,.15),inset 0 0 12px rgba(0,229,255,.08);animation:pulse 3s ease-in-out infinite}
+.tag,.work-cat{font-size:14px}.tag{letter-spacing:2px;padding:9px 20px;margin-bottom:32px;background:rgba(0,229,255,.05);border-radius:var(--radius-sm);box-shadow:0 0 18px rgba(0,229,255,.15),inset 0 0 12px rgba(0,229,255,.08);animation:pulse 3s ease-in-out infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 14px rgba(0,229,255,.12),inset 0 0 10px rgba(0,229,255,.06)}50%{box-shadow:0 0 26px rgba(0,229,255,.3),inset 0 0 14px rgba(0,229,255,.12)}}
 h1.name{font-size:clamp(46px,7.5vw,82px);font-weight:800;letter-spacing:8px;line-height:1.2;color:var(--text);text-shadow:0 0 24px rgba(0,229,255,.5),0 0 60px rgba(0,229,255,.2)}
 h1.name em{font-style:normal;color:var(--cyan);text-shadow:0 0 24px rgba(0,229,255,.8),0 0 70px rgba(0,229,255,.4)}
@@ -140,7 +140,7 @@ section{padding:130px 0}
 .work-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--cyan),var(--pink));opacity:0;transition:opacity .3s}
 .work-card:hover::before{opacity:1}
 .work-card:hover{border-color:rgba(0,229,255,.35);transform:translateY(-4px);box-shadow:0 0 26px rgba(0,229,255,.1)}
-.work-cat{font-size:11px;letter-spacing:2px;color:var(--purple);text-transform:uppercase;margin-bottom:12px;font-family:var(--pixel);text-shadow:0 0 8px rgba(185,103,255,.5)}
+.work-cat{font-size:14px;letter-spacing:2px;color:var(--purple);text-transform:uppercase;margin-bottom:12px;font-family:var(--pixel);text-shadow:0 0 8px rgba(185,103,255,.5)}
 .work-name{font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text);letter-spacing:1px}
 .work-role{font-size:14px;color:var(--dim);letter-spacing:1px;font-family:var(--pixel)}
 /* ══ 教育 ══ */
