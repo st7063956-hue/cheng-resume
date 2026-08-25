@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STAR GAFFER | Lighting Director & Stage Lighting Engineer</title>
+<style>
+@font-face{
+  font-family:"Press Start 2P";
+  src:url("fonts/PressStart2P.woff2") format("woff2");
+  font-display:swap;
+}
+@font-face{
+  font-family:"Zpix";
+  src:url("Zpix.ttf") format("truetype");
+  font-display:swap;
+}
+:root{
+  --bg:#04070d; --bg2:#0a1120; --card:#0a1424;
+  --cyan:#00e5ff; --pink:#ff2a6d; --purple:#b967ff;
+  --yellow:#f9f002; --green:#05ffa1;
+  --text:#c8e6ff; --dim:#5f7ea6; --line:rgba(0,229,255,.2);
+  --radius:14px; --radius-sm:8px;
+  --pixel:"Press Start 2P","Zpix","Courier New",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:"Zpix","PingFang SC",sans-serif;line-height:2.05;overflow-x:hidden;letter-spacing:.05em;font-size:16px}
+::selection{background:var(--cyan);color:#000}
+/* ══ 赛博背景：网格 + 地平线 + 扫描线 + 光斑 ══ */
+.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(0,229,255,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.05) 1px,transparent 1px);
+  background-size:42px 42px;
+  perspective:600px;
+}
+.bg-grid::before{content:"";position:absolute;left:-20%;right:-20%;bottom:-10%;height:55%;
+  background:linear-gradient(rgba(0,229,255,.07) 1px,transparent 1px);
+  background-size:42px 42px;
+  transform:rotateX(62deg);transform-origin:bottom;
+  mask-image:linear-gradient(transparent,black 40%,black);-webkit-mask-image:linear-gradient(transparent,black 40%,black)}
+.bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0}
+.bg-glow::before{content:"";position:absolute;top:-25%;left:40%;width:65vw;height:60vh;background:radial-gradient(ellipse at center,rgba(0,229,255,.08),transparent 60%)}
+.bg-glow::after{content:"";position:absolute;bottom:-30%;right:-10%;width:55vw;height:55vh;background:radial-gradient(ellipse at center,rgba(255,42,109,.06),transparent 60%)}
+.scanlines{position:fixed;inset:0;pointer-events:none;z-index:1;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+.sweep{position:fixed;left:0;right:0;height:120px;pointer-events:none;z-index:1;
+  background:linear-gradient(180deg,transparent,rgba(0,229,255,.04),transparent);
+  animation:sweep 7s linear infinite}
+@keyframes sweep{from{top:-15%}to{top:110%}}
+.wrap{position:relative;z-index:2;max-width:1160px;margin:0 auto;padding:0 30px}
+/* ══ 导航 HUD ══ */
+nav{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(4,7,13,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;justify-content:space-between;align-items:center;height:66px}
+.logo{font-family:var(--pixel);font-weight:700;letter-spacing:2px;font-size:14px;color:var(--cyan);text-shadow:0 0 12px rgba(0,229,255,.6)}
+.logo span{color:var(--pink);text-shadow:0 0 12px rgba(255,42,109,.6)}
+nav a{color:var(--dim);text-decoration:none;font-size:13.5px;margin-left:30px;transition:all .25s;letter-spacing:2px;font-family:var(--pixel)}
+nav a:hover{color:var(--cyan);text-shadow:0 0 10px rgba(0,229,255,.8)}
+/* ══ HUD 角落装饰 ══ */
+.corner{position:fixed;width:34px;height:34px;pointer-events:none;z-index:5;opacity:.7}
+.corner.tl{top:70px;left:12px;border-top:2px solid var(--cyan);border-left:2px solid var(--cyan)}
+.corner.tr{top:70px;right:12px;border-top:2px solid var(--pink);border-right:2px solid var(--pink)}
+.corner.bl{bottom:12px;left:12px;border-bottom:2px solid var(--pink);border-left:2px solid var(--pink)}
+.corner.br{bottom:12px;right:12px;border-bottom:2px solid var(--cyan);border-right:2px solid var(--cyan)}
+.hud-label{position:fixed;left:14px;bottom:16px;font-family:var(--pixel);font-size:8px;color:rgba(0,229,255,.5);letter-spacing:1px;z-index:5;pointer-events:none}
+.hud-label2{position:fixed;right:14px;top:74px;font-family:var(--pixel);font-size:8px;color:rgba(255,42,109,.5);z-index:5;pointer-events:none;writing-mode:vertical-rl;letter-spacing:2px}
+/* ══ Hero ══ */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;padding-top:90px;text-align:center}
+.hero-inner{width:100%;display:flex;flex-direction:column;align-items:center}
+.tag{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--cyan);color:var(--cyan);font-family:var(--pixel);font-size:12px;letter-spacing:2px;padding:9px 20px;margin-bottom:32px;background:rgba(0,229,255,.05);border-radius:var(--radius-sm);box-shadow:0 0 18px rgba(0,229,255,.15),inset 0 0 12px rgba(0,229,255,.08);animation:pulse 3s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 14px rgba(0,229,255,.12),inset 0 0 10px rgba(0,229,255,.06)}50%{box-shadow:0 0 26px rgba(0,229,255,.3),inset 0 0 14px rgba(0,229,255,.12)}}
+h1.name{font-size:clamp(46px,7.5vw,82px);font-weight:800;letter-spacing:8px;line-height:1.2;color:var(--text);text-shadow:0 0 24px rgba(0,229,255,.5),0 0 60px rgba(0,229,255,.2)}
+h1.name em{font-style:normal;color:var(--cyan);text-shadow:0 0 24px rgba(0,229,255,.8),0 0 70px rgba(0,229,255,.4)}
+h1.name .p{font-style:normal;color:var(--pink);text-shadow:0 0 24px rgba(255,42,109,.8)}
+.sub-role{font-size:clamp(15px,2.2vw,20px);color:var(--green);margin-top:20px;letter-spacing:4px;font-family:var(--pixel);text-shadow:0 0 14px rgba(5,255,161,.5)}
+.hero-meta{display:flex;flex-wrap:wrap;gap:14px;margin-top:42px;justify-content:center}
+.meta-chip{border:1px solid var(--line);padding:11px 24px;font-size:13.5px;color:var(--dim);background:rgba(10,20,36,.7);border-radius:var(--radius-sm);letter-spacing:1px;position:relative;overflow:hidden}
+.meta-chip::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(0,229,255,.1),transparent);animation:chip 4s linear infinite}
+@keyframes chip{from{left:-100%}to{left:100%}}
+.meta-chip b{color:var(--cyan);font-weight:700;text-shadow:0 0 8px rgba(0,229,255,.5)}
+.hero-btns{margin-top:50px;display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:17px 40px;text-decoration:none;font-size:13.5px;font-weight:700;transition:all .3s;letter-spacing:2px;border-radius:var(--radius-sm);font-family:var(--pixel)}
+.btn-solid{background:linear-gradient(135deg,rgba(0,229,255,.2),rgba(255,42,109,.2));color:var(--cyan);border:1.5px solid var(--cyan);box-shadow:0 0 20px rgba(0,229,255,.25),inset 0 0 14px rgba(0,229,255,.1)}
+.btn-solid:hover{transform:translateY(-3px);box-shadow:0 0 36px rgba(0,229,255,.5),inset 0 0 18px rgba(0,229,255,.2);color:#fff}
+.btn-ghost{border:1.5px solid var(--pink);color:var(--pink);box-shadow:0 0 14px rgba(255,42,109,.15)}
+.btn-ghost:hover{border-color:var(--pink);color:#fff;box-shadow:0 0 30px rgba(255,42,109,.4);transform:translateY(-3px)}
+.scroll-hint{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);color:var(--cyan);font-family:var(--pixel);font-size:10px;letter-spacing:3px;animation:float 2.2s infinite;text-shadow:0 0 10px rgba(0,229,255,.6)}
+@keyframes float{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,10px)}}
+/* ══ 区块 ══ */
+section{padding:130px 0}
+.sec-head{margin-bottom:60px;position:relative;text-align:center}
+.sec-no{color:var(--pink);font-family:var(--pixel);font-size:12px;letter-spacing:2px;display:block;margin-bottom:14px;text-shadow:0 0 10px rgba(255,42,109,.5)}
+.sec-title{font-size:clamp(28px,4vw,42px);font-weight:800;letter-spacing:5px;color:var(--text)}
+.sec-title b{color:var(--cyan);font-weight:800;text-shadow:0 0 18px rgba(0,229,255,.6)}
+.sec-title::after{content:"";display:block;width:80px;height:3px;background:linear-gradient(90deg,var(--cyan),var(--pink),transparent);margin:18px auto 0;box-shadow:0 0 12px rgba(0,229,255,.5)}
+/* ══ 数据条 ══ */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:18px;margin-top:66px}
+.stat{text-align:center;padding:30px 14px;background:linear-gradient(160deg,var(--card),#060d1a);border:1px solid var(--line);border-radius:var(--radius);position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),transparent);box-shadow:0 0 14px rgba(0,229,255,.7)}
+.stat::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(0,229,255,.04));pointer-events:none}
+.stat-num{font-size:36px;font-weight:800;color:var(--cyan);letter-spacing:2px;font-family:var(--pixel);text-shadow:0 0 16px rgba(0,229,255,.7)}
+.stat-label{font-size:12.5px;color:var(--dim);margin-top:10px;letter-spacing:2px;font-family:var(--pixel)}
+/* ══ 优势卡 ══ */
+.adv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:24px}
+.adv-card{background:linear-gradient(160deg,var(--card),#060d1a);border:1px solid var(--line);border-radius:var(--radius);padding:42px 38px;transition:all .3s;position:relative;overflow:hidden;text-align:center}
+.adv-card::before{content:"";position:absolute;top:0;left:0;width:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--pink));transition:width .45s ease;box-shadow:0 0 16px rgba(0,229,255,.7)}
+.adv-card:hover::before{width:100%}
+.adv-card::after{content:"";position:absolute;right:-40px;bottom:-40px;width:120px;height:120px;border:1px solid rgba(0,229,255,.08);border-radius:50%;transition:all .4s}
+.adv-card:hover::after{transform:scale(1.4);border-color:rgba(255,42,109,.15)}
+.adv-card:hover{transform:translateY(-5px);border-color:rgba(0,229,255,.4);box-shadow:0 0 30px rgba(0,229,255,.12)}
+.adv-num{font-size:38px;font-weight:800;color:rgba(0,229,255,.16);line-height:1;margin-bottom:18px;font-family:var(--pixel)}
+.adv-card h3{font-size:18px;margin-bottom:14px;color:var(--cyan);letter-spacing:2px;text-shadow:0 0 12px rgba(0,229,255,.3)}
+.adv-card p{font-size:15.5px;color:var(--dim);line-height:2}
+.adv-card p b{color:var(--text);font-weight:600}
+/* ══ 时间线 ══ */
+.timeline{position:relative;padding-left:44px;text-align:left;max-width:900px;margin:0 auto}
+.timeline::before{content:"";position:absolute;left:10px;top:10px;bottom:10px;width:2px;background:repeating-linear-gradient(180deg,var(--cyan) 0 7px,transparent 7px 14px);box-shadow:0 0 8px rgba(0,229,255,.4)}
+.job{position:relative;margin-bottom:60px;background:linear-gradient(160deg,var(--card),#060d1a);border:1px solid var(--line);border-radius:var(--radius);padding:40px 44px;overflow:hidden}
+.job::before{content:"◈";position:absolute;left:-42px;top:6px;font-size:14px;color:var(--cyan);text-shadow:0 0 14px rgba(0,229,255,.8)}
+.job::after{content:"";position:absolute;top:0;right:0;width:60px;height:60px;border-top:1px solid rgba(0,229,255,.25);border-right:1px solid rgba(0,229,255,.25);border-radius:0 var(--radius) 0 0}
+.job-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
+.job-title{font-size:20px;font-weight:700;letter-spacing:2px;color:var(--text)}
+.job-title span{color:var(--pink);font-weight:600;font-size:14px;text-shadow:0 0 10px rgba(255,42,109,.4)}
+.job-date{font-size:12px;color:var(--cyan);letter-spacing:2px;font-family:var(--pixel);text-shadow:0 0 8px rgba(0,229,255,.4)}
+.job-role{font-size:15px;color:var(--dim);margin-bottom:18px;letter-spacing:1px}
+.job ul{list-style:none}
+.job li{font-size:15.5px;color:var(--text);padding:8px 0 8px 26px;position:relative}
+.job li::before{content:"▸";position:absolute;left:0;color:var(--cyan);text-shadow:0 0 8px rgba(0,229,255,.8)}
+.job li b{color:var(--cyan);font-weight:600}
+/* ══ 技能 ══ */
+.skill-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:22px}
+.skill-card{background:linear-gradient(160deg,var(--card),#060d1a);border:1px solid var(--line);border-radius:var(--radius);padding:36px 32px;position:relative;overflow:hidden;transition:all .3s;text-align:center}
+.skill-card:hover{border-color:rgba(255,42,109,.4);box-shadow:0 0 24px rgba(255,42,109,.1)}
+.skill-card::after{content:"";position:absolute;top:-30px;right:-30px;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle,rgba(255,42,109,.12),transparent 70%)}
+.skill-card h4{color:var(--pink);font-size:15px;letter-spacing:2px;margin-bottom:20px;text-shadow:0 0 10px rgba(255,42,109,.4)}
+.skill-chip{display:inline-block;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.2);color:var(--text);font-size:14px;padding:6px 14px;margin:0 8px 10px 0;border-radius:var(--radius-sm);letter-spacing:1px;transition:all .25s}
+.skill-chip:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 14px rgba(0,229,255,.3)}
+/* ══ 作品 ══ */
+.work-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px}
+.work-card{background:linear-gradient(160deg,var(--card),#060d1a);border:1px solid var(--line);border-radius:var(--radius);padding:38px 34px;transition:all .3s;position:relative;overflow:hidden;text-align:center}
+.work-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--cyan),var(--pink));opacity:0;transition:opacity .3s}
+.work-card:hover::before{opacity:1}
+.work-card:hover{border-color:rgba(0,229,255,.35);transform:translateY(-4px);box-shadow:0 0 26px rgba(0,229,255,.1)}
+.work-cat{font-size:11px;letter-spacing:2px;color:var(--purple);text-transform:uppercase;margin-bottom:12px;font-family:var(--pixel);text-shadow:0 0 8px rgba(185,103,255,.5)}
+.work-name{font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text);letter-spacing:1px}
+.work-role{font-size:14px;color:var(--dim);letter-spacing:1px;font-family:var(--pixel)}
+/* ══ 教育 ══ */
+.edu-block{background:linear-gradient(160deg,var(--card),#060d1a);border:1px solid var(--line);border-radius:var(--radius);padding:46px 42px;margin-bottom:44px;position:relative;overflow:hidden;text-align:center}
+.edu-block::before{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(180deg,var(--purple),var(--cyan))}
+.edu-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px}
+.edu-title{font-size:20px;font-weight:700;letter-spacing:2px}
+.edu-title span{color:var(--purple);font-size:14px;text-shadow:0 0 10px rgba(185,103,255,.4)}
+.edu-date{font-size:12px;color:var(--purple);font-family:var(--pixel);letter-spacing:2px}
+.edu-role{font-size:15px;color:var(--dim);margin-bottom:12px}
+.cer-grid{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
+.cer{display:inline-flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--line);padding:14px 28px;font-size:14.5px;color:var(--text);border-radius:var(--radius-sm);letter-spacing:1px;transition:all .25s}
+.cer:hover{border-color:var(--cyan);box-shadow:0 0 16px rgba(0,229,255,.2)}
+.cer i{color:var(--cyan);font-style:normal;text-shadow:0 0 8px rgba(0,229,255,.6)}
+/* ══ 联系 ══ */
+.contact{text-align:center;padding:100px 0 110px}
+.contact h2{font-size:clamp(24px,3.4vw,36px);font-weight:800;letter-spacing:5px;margin-bottom:22px}
+.contact h2 b{color:var(--cyan);text-shadow:0 0 20px rgba(0,229,255,.6)}
+.contact p{color:var(--dim);font-size:16px;margin-bottom:48px;letter-spacing:2px}
+.contact-links{display:flex;flex-wrap:wrap;justify-content:center;gap:20px}
+.c-link{display:inline-flex;align-items:center;gap:11px;padding:18px 40px;border:1.5px solid var(--line);color:var(--text);text-decoration:none;font-size:15px;transition:all .3s;background:var(--card);border-radius:var(--radius-sm);letter-spacing:1px}
+.c-link:hover{border-color:var(--cyan);color:var(--cyan);transform:translateY(-3px);box-shadow:0 0 26px rgba(0,229,255,.25)}
+/* footer */
+footer{border-top:1px solid var(--line);padding:34px 0;text-align:center;color:var(--dim);font-size:12px;letter-spacing:3px;font-family:var(--pixel)}
+footer b{color:var(--cyan);text-shadow:0 0 10px rgba(0,229,255,.5)}
+/* 响应式 */
+@media(max-width:640px){
+  nav a{margin-left:14px;font-size:10px}
+  .logo{font-size:10px}
+  .job-head{flex-direction:column}
+  .hud-label2{display:none}
+}
+/* 动画 */
+.reveal{opacity:0;transform:translateY(30px);transition:all .8s ease}
+.reveal.show{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<!-- 赛博背景层 -->
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<div class="scanlines"></div>
+<div class="sweep"></div>
+<!-- HUD 装饰 -->
+<div class="corner tl"></div><div class="corner tr"></div>
+<div class="corner bl"></div><div class="corner br"></div>
+<div class="hud-label">SYS.ONLINE // SHANGHAI · CST</div>
+<div class="hud-label2">STAR.GAFFER // LD</div>
+
+<nav>
+  <div class="wrap">
+    <div class="logo">STAR<span>_GAFFER</span></div>
+    <div>
+      <a href="#about">ABOUT</a>
+      <a href="#experience">EXPERIENCE</a>
+      <a href="#skills">SKILLS</a>
+      <a href="#works">WORKS</a>
+      <a href="#contact">CONTACT</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap hero-inner">
+    <span class="tag">◈ LIGHTING ENGINEER ◈ ONLINE</span>
+    <h1 class="name">STAR<em> GAFF</em><span class="p">ER</span></h1>
+    <div class="sub-role">LIGHTING DIRECTOR / STAGE LIGHTING ENGINEER</div>
+    <div class="hero-meta">
+      <span class="meta-chip">🎂 <b>25</b> · MALE</span>
+      <span class="meta-chip">💼 <b>3+ YRS</b> EXPERIENCE</span>
+      <span class="meta-chip">📍 <b>SHANGHAI</b></span>
+      <span class="meta-chip">💰 EXPECTED <b>12-15K</b></span>
+    </div>
+    <div class="hero-btns">
+      <a class="btn btn-solid" href="#works">VIEW WORKS ↓</a>
+      <a class="btn btn-ghost" href="#contact">CONTACT ME</a>
+    </div>
+  </div>
+  <div class="scroll-hint">SCROLL ▼</div>
+</header>
+
+<!-- 数据总览 -->
+<section>
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat reveal"><div class="stat-num">2</div><div class="stat-label">GLOBAL PROJECTS</div></div>
+      <div class="stat reveal"><div class="stat-num">20+</div><div class="stat-label">TVC COMMERCIALS</div></div>
+      <div class="stat reveal"><div class="stat-num">30+</div><div class="stat-label">LIVE EVENTS PROGRAMMED</div></div>
+      <div class="stat reveal"><div class="stat-num">10+</div><div class="stat-label">CELEBRITY LIVE ROOMS</div></div>
+      <div class="stat reveal"><div class="stat-num">17</div><div class="stat-label">FEATURED PROJECTS</div></div>
+      <div class="stat reveal"><div class="stat-num">3</div><div class="stat-label">WIRELESS ECOSYSTEMS</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 核心优势 -->
+<section id="about">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-no">01 // CORE_STRENGTHS</span>
+      <h2 class="sec-title">CORE <b>STRENGTHS</b></h2>
+    </div>
+    <div class="adv-grid">
+      <div class="adv-card reveal">
+        <div class="adv-num">01</div>
+        <h3>Cinematic Lighting Architect</h3>
+        <p>Led lighting for <b>20+ TVCs</b> (7or9, Tsingtao Beer); built 3D lighting for the Tianmeiyi × Wu Xin live room; tech platform for <b>10+ celebrity streams</b> (Vatti × Ouyang Nana), boosting GMV conversion <b>37%</b> (industry avg. 25%).</p>
+      </div>
+      <div class="adv-card reveal">
+        <div class="adv-num">02</div>
+        <h3>Digital Media Operations</h3>
+        <p>Independently ran <b>Bilibili / Xiaohongshu</b>; cold-started <b>ASTERA official to 1,000+ followers in 30 days</b> (avg. 45+); 92% content focus.</p>
+      </div>
+      <div class="adv-card reveal">
+        <div class="adv-num">03</div>
+        <h3>Cinema-Grade Equipment</h3>
+        <p>Expert in <b>ARRI Alexa Mini LF / Sony FX6</b> full-frame workflows; built equipment matrices (12 params: dynamic range, gamut, codecs).</p>
+      </div>
+      <div class="adv-card reveal">
+        <div class="adv-num">04</div>
+        <h3>International Brand Tech Services</h3>
+        <p><b>ASTERA Chief Technical Consultant, China</b>; built lighting knowledge base (85% client retention); led Creamsource East-China services.</p>
+      </div>
+      <div class="adv-card reveal">
+        <div class="adv-num">05</div>
+        <h3>Stage Lighting Engineer</h3>
+        <p><b>grandMA2/3 certified</b>; programmed 30+ major events — <b>LOL Worlds 25 Finals (Chengdu) Astera lighting support</b>, <b>Apple MacBook Neo launch Astera/Aputure support</b>, Rolex West Bund Dome, Fendi Gala Dinner, 2024 SIFF red carpet & more.</p>
+      </div>
+      <div class="adv-card reveal">
+        <div class="adv-num">06</div>
+        <h3>Full Post-Production</h3>
+        <p>Full post pipeline: VFX / audio / DI / color liaison; <b>DaVinci Resolve certified</b>; picture-lock to final master.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 工作经历 -->
+<section id="experience">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-no">02 // EXPERIENCE</span>
+      <h2 class="sec-title">WORK <b>EXPERIENCE</b></h2>
+    </div>
+    <div class="timeline">
+      <div class="job reveal">
+        <div class="job-head">
+          <div class="job-title">Shanghai Rongting Film & TV Equipment Co. <span>· Lighting Technician</span></div>
+          <div class="job-date">NOV 2023 — PRESENT</div>
+        </div>
+        <div class="job-role">Premium Live-Stream Solutions · Top-Tier Lighting Tech Support</div>
+        <ul>
+          <li><b>Celebrity / premium live rooms</b>: Ouyang Nana, Wang Anqi & more; Wu Xin × Tianmeiyi; 2024 Balenciaga live-room lighting support</li>
+          <li><b>Brand event support</b>: Valorant TVC console lighting; Salomon event console operator</li>
+          <li><b>Luxury brands</b>: Hermès, Louis Vuitton equipment & tech support</li>
+          <li><b>Three international brands</b>: ASTERA (DE), Creamsource, Aputure — field marketing / pre-sales / after-sales / training</li>
+        </ul>
+      </div>
+      <div class="job reveal">
+        <div class="job-head">
+          <div class="job-title">Shanghai Shenyuzhou Film & TV Technology Co. <span>· Social Media Ops Lead</span></div>
+          <div class="job-date">NOV 2023 — PRESENT</div>
+        </div>
+        <div class="job-role">Account Ops · Content Strategy · Data Analytics</div>
+        <ul>
+          <li>Managed 2-3 accounts: <b>Heritage Lighting Master XiaoCheng</b>, <b>ASTERA Official</b></li>
+          <li>Content editing & copywriting, traffic analysis, video & live-stream production</li>
+          <li>Cold-started accounts to <b>1,000+ followers in one month</b> (film niche), <b>zero ad spend</b></li>
+        </ul>
+      </div>
+      <div class="job reveal">
+        <div class="job-head">
+          <div class="job-title">Radiation Planet (Beijing) Pictures <span>· Post-Production Coordinator</span></div>
+          <div class="job-date">OCT 2022 — NOV 2023</div>
+        </div>
+        <div class="job-role">End-to-End Post-Production Management</div>
+        <ul>
+          <li>Coordinated edit → VFX → audio → DI color with VFX supervisors, sound & DI teams</li>
+          <li>Asset distribution, version control, final delivery coordination</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 技能 -->
+<section id="skills">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-no">03 // SKILLS</span>
+      <h2 class="sec-title">PROFESSIONAL <b>SKILLS</b></h2>
+    </div>
+    <div class="skill-grid">
+      <div class="skill-card reveal">
+        <h4>💡 LIGHTING CONSOLES</h4>
+        <span class="skill-chip">GrandMA2</span><span class="skill-chip">GrandMA3</span><span class="skill-chip">Officially Certified</span>
+      </div>
+      <div class="skill-card reveal">
+        <h4>🎨 DESIGN SOFTWARE</h4>
+        <span class="skill-chip">Vectorworks</span><span class="skill-chip">Cinema 4D</span><span class="skill-chip">Capture</span>
+      </div>
+      <div class="skill-card reveal">
+        <h4>🖥️ PRE-VISUALIZATION</h4>
+        <span class="skill-chip">Depence R2/R3/R4</span><span class="skill-chip">Capture 2024/25/26</span>
+      </div>
+      <div class="skill-card reveal">
+        <h4>📡 WIRELESS CONTROL</h4>
+        <span class="skill-chip">Lumenradio Stardust</span><span class="skill-chip">Aurora</span><span class="skill-chip">Wired System Integration</span>
+      </div>
+      <div class="skill-card reveal">
+        <h4>🎥 CAMERA EQUIPMENT</h4>
+        <span class="skill-chip">ARRI Alexa Mini LF</span><span class="skill-chip">Sony FX6</span><span class="skill-chip">Full-Frame Workflow</span>
+      </div>
+      <div class="skill-card reveal">
+        <h4>🎬 POST-PRODUCTION</h4>
+        <span class="skill-chip">DaVinci Resolve</span><span class="skill-chip">Coordination</span><span class="skill-chip">VFX Liaison</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 代表作品 -->
+<section id="works">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-no">04 // WORKS</span>
+      <h2 class="sec-title">FEATURED <b>WORKS</b></h2>
+    </div>
+    <div class="work-grid">
+      <div class="work-card reveal"><div class="work-cat">ESPORTS</div><div class="work-name">LOL Worlds 25 Finals (Chengdu)</div><div class="work-role">Astera Lighting Support</div></div>
+      <div class="work-card reveal"><div class="work-cat">PRODUCT LAUNCH</div><div class="work-name">Apple MacBook Neo Launch</div><div class="work-role">Astera & Aputure Lighting Support</div></div>
+      <div class="work-card reveal"><div class="work-cat">STAGE EVENTS</div><div class="work-name">Rolex "Oyster Legend" West Bund Dome Opening</div><div class="work-role">grandMA3 Console Assistant + LumenRadio Wireless System</div></div>
+      <div class="work-card reveal"><div class="work-cat">STAGE EVENTS</div><div class="work-name">2024 SIFF Red Carpet</div><div class="work-role">Lighting Programming</div></div>
+      <div class="work-card reveal"><div class="work-cat">STAGE EVENTS</div><div class="work-name">Fendi Gala Dinner, Jingdezhen</div><div class="work-role">Lighting Console Operator</div></div>
+      <div class="work-card reveal"><div class="work-cat">STAGE EVENTS</div><div class="work-name">Shanghai VW Media Night</div><div class="work-role">Astera Lighting Support (Tube Wall)</div></div>
+      <div class="work-card reveal"><div class="work-cat">STAGE EVENTS</div><div class="work-name">Ralph Lauren Polo Invitational</div><div class="work-role">Console Operator</div></div>
+      <div class="work-card reveal"><div class="work-cat">PREMIUM EVENTS</div><div class="work-name">Bvlgari Jewelry Exhibition @ Shanghai Contemporary Art Center</div><div class="work-role">LumenRadio Wireless Solutions</div></div>
+      <div class="work-card reveal"><div class="work-cat">PREMIUM EVENTS</div><div class="work-name">HSBC Life × HKDance KFA Shanghai</div><div class="work-role">Console Lighting Operator</div></div>
+      <div class="work-card reveal"><div class="work-cat">INTERNATIONAL</div><div class="work-name">LEGO FLL Beijing</div><div class="work-role">Lighting Tech Support</div></div>
+      <div class="work-card reveal"><div class="work-cat">LIVE ROOMS</div><div class="work-name">Ouyang Nana × Vatti</div><div class="work-role">Lighting System Build</div></div>
+      <div class="work-card reveal"><div class="work-cat">LIVE ROOMS</div><div class="work-name">Wu Xin × Tianmeiyi</div><div class="work-role">Lighting System Build</div></div>
+      <div class="work-card reveal"><div class="work-cat">TVC</div><div class="work-name">7or9</div><div class="work-role">Lighting Designer</div></div>
+      <div class="work-card reveal"><div class="work-cat">TVC</div><div class="work-name">Tsingtao Beer</div><div class="work-role">Lighting Designer</div></div>
+      <div class="work-card reveal"><div class="work-cat">TVC</div><div class="work-name">Dong-E E-Jiao</div><div class="work-role">Lighting Designer</div></div>
+      <div class="work-card reveal"><div class="work-cat">TVC</div><div class="work-name">NEIWAI ACTIVE</div><div class="work-role">Lighting Designer</div></div>
+      <div class="work-card reveal"><div class="work-cat">TVC</div><div class="work-name">Giant 4th-Gen PP Launch</div><div class="work-role">Lighting Designer</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 教育 & 证书 -->
+<section>
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-no">05 // EDUCATION</span>
+      <h2 class="sec-title"><b>EDUCATION</b> & CERTIFICATIONS</h2>
+    </div>
+    <div class="edu-block reveal">
+      <div class="edu-head">
+        <div class="edu-title">Nanjing Univ. of Aeronautics & Astronautics, Jincheng College <span>· Bachelor</span></div>
+        <div class="edu-date">2019 — 2023</div>
+      </div>
+      <div class="edu-role">Mechatronics Engineering · Top 20%</div>
+      <p style="font-size:13.5px;color:var(--dim)">Self-taught: cinematography, lighting, screenwriting, post-production color & editing (DaVinci Resolve certified), production theory.</p>
+    </div>
+    <div class="cer-grid reveal">
+      <span class="cer"><i>🏅</i> CET-6</span>
+      <span class="cer"><i>🏅</i> CET-4</span>
+      <span class="cer"><i>🏅</i> PET-A</span>
+      <span class="cer"><i>🚗</i> Driver's License C1</span>
+      <span class="cer"><i>🚗</i> Driver's License C2</span>
+      <span class="cer"><i>🎛️</i> grandMA2/3 Certified</span>
+      <span class="cer"><i>🎨</i> DaVinci Resolve Certified</span>
+    </div>
+  </div>
+</section>
+
+<!-- 联系 -->
+<section id="contact">
+  <div class="wrap contact reveal">
+    <h2>LET'S TURN LIGHT <b>INTO DATA</b></h2>
+    <p>Light is more than illumination — it's storytelling. Looking forward to connecting.</p>
+    <div class="contact-links">
+      <a class="c-link" href="tel:+8615060757917">📞 +86 150 6075 7917</a>
+      <a class="c-link" href="mailto:st7063956@gmail.com">✉️ st7063956@gmail.com</a>
+      <a class="c-link" href="https://weixin.qq.com" target="_blank">💬 WeChat: 15060757917</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap"><b>STAR_GAFFER</b> · LIGHTING ENGINEER © 2026 // SYS.ONLINE</div>
+</footer>
+
+<script>
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('show'); io.unobserve(e.target);} });
+},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
